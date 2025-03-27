@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Search, User } from "lucide-react";
+import { t } from "./ThemeProvider";
 
 interface HeaderProps {
   activeTab: string;
@@ -78,7 +79,7 @@ const Header = ({ activeTab, onTabChange, onToggleAdminPanel }: HeaderProps) => 
               }`}
               onClick={() => onTabChange("daily")}
             >
-              Daily Quote
+              {t('daily')}
             </button>
             <button 
               className={`px-4 py-4 text-sm font-medium border-b-2 ${
@@ -88,7 +89,7 @@ const Header = ({ activeTab, onTabChange, onToggleAdminPanel }: HeaderProps) => 
               }`}
               onClick={() => onTabChange("discover")}
             >
-              Discover
+              {t('discover')}
             </button>
             <button 
               className={`px-4 py-4 text-sm font-medium border-b-2 ${
@@ -98,7 +99,7 @@ const Header = ({ activeTab, onTabChange, onToggleAdminPanel }: HeaderProps) => 
               }`}
               onClick={() => onTabChange("favorites")}
             >
-              My Favorites
+              {t('favorites')}
             </button>
             <button 
               className={`px-4 py-4 text-sm font-medium border-b-2 ${
@@ -108,7 +109,7 @@ const Header = ({ activeTab, onTabChange, onToggleAdminPanel }: HeaderProps) => 
               }`}
               onClick={() => onTabChange("settings")}
             >
-              Settings
+              {t('settings')}
             </button>
           </nav>
         </div>

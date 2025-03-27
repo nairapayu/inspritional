@@ -3,11 +3,50 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --color-background: #FFFFFF;
+    --color-backgroundEnd: #F5F7FA;
+    --color-text: #2C3E50;
+    --color-primary: #6B8EAE;
+    --color-secondary: #95A5A6;
+    --color-accent: #FFB84D;
+  }
+
   * {
     @apply border-border;
   }
 
   body {
-    @apply font-sans antialiased bg-background text-foreground;
+    @apply font-sans antialiased;
+    background-color: var(--color-background);
+    color: var(--color-text);
+  }
+  
+  .text-primary {
+    color: var(--color-primary);
+  }
+  
+  .text-secondary {
+    color: var(--color-secondary);
+  }
+  
+  .text-accent {
+    color: var(--color-accent);
+  }
+  
+  .bg-primary {
+    background-color: var(--color-primary);
+  }
+  
+  .bg-secondary {
+    background-color: var(--color-secondary);
+  }
+  
+  .bg-accent {
+    background-color: var(--color-accent);
+  }
+  
+  .border-primary {
+    border-color: var(--color-primary);
   }
 }

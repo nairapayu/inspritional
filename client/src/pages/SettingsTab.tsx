@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Category } from "@shared/schema";
+import { t } from "@/components/ThemeProvider";
 
 const SettingsTab = () => {
   const { settings, updateSettings, saveSettings, isLoading, isSaving } = useSettings();
@@ -94,7 +95,7 @@ const SettingsTab = () => {
               {/* Theme Selection */}
               <div className="space-y-5">
                 <div>
-                  <Label className="block text-sm font-medium mb-2">Theme</Label>
+                  <Label className="block text-sm font-medium mb-2">{t('theme')}</Label>
                   <div className="grid grid-cols-4 gap-3">
                     <button 
                       className={`h-12 rounded-custom ${
@@ -223,7 +224,7 @@ const SettingsTab = () => {
               
               <div className="space-y-4">
                 <div>
-                  <Label className="block text-sm font-medium mb-2">Language</Label>
+                  <Label className="block text-sm font-medium mb-2">{t('language')}</Label>
                   <Select 
                     value={settings?.language || "en"} 
                     onValueChange={handleLanguageChange}
@@ -274,7 +275,7 @@ const SettingsTab = () => {
             onClick={handleSaveSettings}
             disabled={isSaving}
           >
-            {isSaving ? "Saving..." : "Save Settings"}
+            {isSaving ? "Saving..." : t('saveSettings')}
           </Button>
         </div>
       </div>

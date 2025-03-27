@@ -4,6 +4,7 @@ import {
   Heart, 
   Settings 
 } from "lucide-react";
+import { t } from "./ThemeProvider";
 
 interface MobileNavProps {
   activeTab: string;
@@ -21,7 +22,7 @@ const MobileNav = ({ activeTab, onTabChange }: MobileNavProps) => {
           onClick={() => onTabChange("daily")}
         >
           <Lightbulb className="h-5 w-5" />
-          <span className="text-xs mt-1">Daily</span>
+          <span className="text-xs mt-1">{t('daily')}</span>
         </button>
 
         <button 
@@ -31,7 +32,7 @@ const MobileNav = ({ activeTab, onTabChange }: MobileNavProps) => {
           onClick={() => onTabChange("discover")}
         >
           <Compass className="h-5 w-5" />
-          <span className="text-xs mt-1">Discover</span>
+          <span className="text-xs mt-1">{t('discover')}</span>
         </button>
 
         <button 
@@ -41,7 +42,7 @@ const MobileNav = ({ activeTab, onTabChange }: MobileNavProps) => {
           onClick={() => onTabChange("favorites")}
         >
           <Heart className="h-5 w-5" />
-          <span className="text-xs mt-1">Favorites</span>
+          <span className="text-xs mt-1">{t('favorites')}</span>
         </button>
 
         <button 
@@ -51,7 +52,7 @@ const MobileNav = ({ activeTab, onTabChange }: MobileNavProps) => {
           onClick={() => onTabChange("settings")}
         >
           <Settings className="h-5 w-5" />
-          <span className="text-xs mt-1">Settings</span>
+          <span className="text-xs mt-1">{t('settings')}</span>
         </button>
       </div>
     </nav>

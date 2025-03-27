@@ -14,6 +14,7 @@ import RegisterPage from "./pages/RegisterPage";
 import { useState, useEffect } from "react";
 import { QuoteContextProvider } from "./contexts/QuoteContext";
 import { SettingsContextProvider } from "./contexts/SettingsContext";
+import ThemeProvider from "./components/ThemeProvider";
 import AdminPanel from "./components/AdminPanel";
 
 function App() {
@@ -64,36 +65,38 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <SettingsContextProvider>
-        <QuoteContextProvider>
-          <div className="flex flex-col h-screen bg-gradient-to-b from-background to-backgroundEnd">
-            <Header 
-              activeTab={activeTab} 
-              onTabChange={handleTabChange} 
-              onToggleAdminPanel={toggleAdminPanel} 
-            />
-            
-            <main className="flex-1 overflow-auto pb-16 sm:pb-0">
-              {activeTab === "login" ? (
-                <LoginPage />
-              ) : activeTab === "register" ? (
-                <RegisterPage />
-              ) : (
-                <>
-                  {activeTab === "daily" && <DailyQuoteTab />}
-                  {activeTab === "discover" && <DiscoverTab />}
-                  {activeTab === "favorites" && <FavoritesTab />}
-                  {activeTab === "settings" && <SettingsTab />}
-                </>
-              )}
-            </main>
-            
-            <MobileNav activeTab={activeTab} onTabChange={handleTabChange} />
-            
-            {isAdminPanelOpen && <AdminPanel onClose={closeAdminPanel} />}
-            
-            <Toaster />
-          </div>
-        </QuoteContextProvider>
+        <ThemeProvider>
+          <QuoteContextProvider>
+            <div className="flex flex-col h-screen bg-gradient-to-b from-[var(--color-background)] to-[var(--color-backgroundEnd)]">
+              <Header 
+                activeTab={activeTab} 
+                onTabChange={handleTabChange} 
+                onToggleAdminPanel={toggleAdminPanel} 
+              />
+              
+              <main className="flex-1 overflow-auto pb-16 sm:pb-0 text-[var(--color-text)]">
+                {activeTab === "login" ? (
+                  <LoginPage />
+                ) : activeTab === "register" ? (
+                  <RegisterPage />
+                ) : (
+                  <>
+                    {activeTab === "daily" && <DailyQuoteTab />}
+                    {activeTab === "discover" && <DiscoverTab />}
+                    {activeTab === "favorites" && <FavoritesTab />}
+                    {activeTab === "settings" && <SettingsTab />}
+                  </>
+                )}
+              </main>
+              
+              <MobileNav activeTab={activeTab} onTabChange={handleTabChange} />
+              
+              {isAdminPanelOpen && <AdminPanel onClose={closeAdminPanel} />}
+              
+              <Toaster />
+            </div>
+          </QuoteContextProvider>
+        </ThemeProvider>
       </SettingsContextProvider>
     </QueryClientProvider>
   );
