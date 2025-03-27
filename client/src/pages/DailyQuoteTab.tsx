@@ -6,11 +6,14 @@ import { useQuotes } from "@/contexts/QuoteContext";
 import { Skeleton } from "@/components/ui/skeleton";
 import QuoteCard from "@/components/QuoteCard";
 import QuoteActions from "@/components/QuoteActions";
+import QuoteGenerator from "@/components/QuoteGenerator";
+import CategoryButtons from "@/components/CategoryButtons";
 import type { QuoteWithCategory } from "@shared/schema";
 
 const DailyQuoteTab = () => {
   const { dailyQuote, setDailyQuote } = useQuotes();
   const today = format(new Date(), "EEEE, MMMM d, yyyy");
+  const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
   
   // Fetch random quote
   const { 
@@ -94,6 +97,11 @@ const DailyQuoteTab = () => {
     );
   }
   
+  // Handle new generated quote
+  const handleQuoteGenerated = (quote: QuoteWithCategory) => {
+    setDailyQuote(quote);
+  };
+
   return (
     <div className="container mx-auto px-4 py-6">
       <div className="space-y-6">
@@ -113,6 +121,21 @@ const DailyQuoteTab = () => {
             />
           </>
         )}
+        
+        <div className="space-y-4 mt-8">
+          <h3 className="text-lg font-medium">Filter by Category</h3>
+          <CategoryButtons 
+            selectedCategoryId={selectedCategoryId}
+            onSelectCategory={setSelectedCategoryId}
+          />
+        </div>
+        
+        <div className="mt-8">
+          <QuoteGenerator 
+            categoryId={selectedCategoryId}
+            onQuoteGenerated={handleQuoteGenerated}
+          />
+        </div>
       </div>
     </div>
   );
