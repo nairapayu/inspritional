@@ -51,15 +51,26 @@ const QuoteGenerator = ({ categoryId, onQuoteGenerated }: QuoteGeneratorProps) =
       setKeyword("");
     },
     onError: (error: any) => {
-      const errorMessage = 
-        error.message?.includes("quota") 
-          ? "API quota exceeded. Please try again later or update your API key in settings."
-          : error.message || "An unexpected error occurred";
+      // Extract error details from the response if available
+      const errorData = error.response?.data || {};
+      const errorCode = errorData.code || '';
+      const errorMessage = errorData.message || error.message || "An unexpected error occurred";
+      
+      // Create a more user-friendly message based on the error type
+      let userFriendlyMessage = errorMessage;
+      
+      if (errorMessage.includes("quota") || errorCode === "insufficient_quota") {
+        userFriendlyMessage = "API quota exceeded. Please try again later or update your API key in settings.";
+      } else if (errorMessage.includes("API key") || errorCode === "invalid_api_key") {
+        userFriendlyMessage = "Invalid API key. Please update your OpenAI API key in settings.";
+      } else if (errorMessage.includes("not available")) {
+        userFriendlyMessage = "Quote generation will use built-in quotes until an OpenAI API key is provided.";
+      }
       
       toast({
-        title: "Failed to generate quote",
-        description: errorMessage,
-        variant: "destructive"
+        title: "Quote Generator Notice",
+        description: userFriendlyMessage,
+        variant: errorMessage.includes("not available") ? "default" : "destructive"
       });
     }
   });

@@ -640,7 +640,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Check if OpenAI is initialized
       if (!openaiInstance) {
-        return res.status(500).json({ message: "OpenAI API not available. Please check the API key." });
+        console.log("Falling back to local generation - OpenAI not available");
+        // Fallback to a locally generated quote if OpenAI is not available
+        const fallbackQuotes = [
+          "Every step forward is a step toward achievement.",
+          "The key to success is to focus on goals, not obstacles.",
+          "Your potential is the sum of all possibilities you have yet to explore.",
+          "Believe you can and you're halfway there.",
+          "Don't watch the clock; do what it does. Keep going.",
+          "The future belongs to those who believe in the beauty of their dreams.",
+          "Success is not final, failure is not fatal: it is the courage to continue that counts."
+        ];
+        
+        // Find a quote that contains keyword from prompt if possible
+        const keywordMatch = prompt.match(/about\s+(\w+)/i);
+        const keyword = keywordMatch ? keywordMatch[1].toLowerCase() : "";
+        
+        let selectedQuote = fallbackQuotes[Math.floor(Math.random() * fallbackQuotes.length)];
+        
+        // Try to find a quote that contains the keyword
+        const matchingQuotes = fallbackQuotes.filter(quote => 
+          quote.toLowerCase().includes(keyword)
+        );
+        
+        if (matchingQuotes.length > 0) {
+          selectedQuote = matchingQuotes[Math.floor(Math.random() * matchingQuotes.length)];
+        }
+        
+        // Save the generated quote
+        const quote = await storage.createQuote({
+          text: selectedQuote,
+          author: "Inspiration Engine",
+          categoryId,
+          backgroundUrl: "https://images.unsplash.com/photo-1470770903676-69b98201ea1c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+          isAiGenerated: true
+        });
+        
+        const quoteWithCategory = await storage.getQuoteWithCategory(quote.id);
+        return res.json(quoteWithCategory);
       }
       
       try {
