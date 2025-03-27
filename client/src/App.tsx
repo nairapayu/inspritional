@@ -23,6 +23,17 @@ function App() {
   const [activeTab, setActiveTab] = useState("daily");
   const [isAdminPanelOpen, setIsAdminPanelOpen] = useState(false);
 
+  // Service Worker Registration
+  useEffect(() => {
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/service-worker.js')
+          .then((reg) => console.log('Service Worker registered!', reg))
+          .catch((err) => console.log('Service Worker registration failed:', err));
+      });
+    }
+  }, []);
+
   // Detect URL hash changes for tab navigation
   useEffect(() => {
     const handleHashChange = () => {
