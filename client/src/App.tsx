@@ -9,6 +9,7 @@ import DailyQuoteTab from "./pages/DailyQuoteTab";
 import DiscoverTab from "./pages/DiscoverTab";
 import FavoritesTab from "./pages/FavoritesTab";
 import SettingsTab from "./pages/SettingsTab";
+import LoginPage from "./pages/LoginPage";
 import { useState, useEffect } from "react";
 import { QuoteContextProvider } from "./contexts/QuoteContext";
 import { SettingsContextProvider } from "./contexts/SettingsContext";
@@ -28,6 +29,10 @@ function App() {
       
       if (hash === "admin") {
         setIsAdminPanelOpen(true);
+      }
+      
+      if (hash === "login") {
+        setActiveTab("login");
       }
     };
 
@@ -63,10 +68,16 @@ function App() {
             />
             
             <main className="flex-1 overflow-auto pb-16 sm:pb-0">
-              {activeTab === "daily" && <DailyQuoteTab />}
-              {activeTab === "discover" && <DiscoverTab />}
-              {activeTab === "favorites" && <FavoritesTab />}
-              {activeTab === "settings" && <SettingsTab />}
+              {activeTab === "login" ? (
+                <LoginPage />
+              ) : (
+                <>
+                  {activeTab === "daily" && <DailyQuoteTab />}
+                  {activeTab === "discover" && <DiscoverTab />}
+                  {activeTab === "favorites" && <FavoritesTab />}
+                  {activeTab === "settings" && <SettingsTab />}
+                </>
+              )}
             </main>
             
             <MobileNav activeTab={activeTab} onTabChange={handleTabChange} />
