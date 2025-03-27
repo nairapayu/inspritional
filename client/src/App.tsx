@@ -16,6 +16,8 @@ import { QuoteContextProvider } from "./contexts/QuoteContext";
 import { SettingsContextProvider } from "./contexts/SettingsContext";
 import ThemeProvider from "./components/ThemeProvider";
 import AdminPanel from "./components/AdminPanel";
+import InstallPWA from "./components/InstallPWA";
+import OfflineIndicator from "./components/OfflineIndicator";
 
 function App() {
   const [activeTab, setActiveTab] = useState("daily");
@@ -92,6 +94,9 @@ function App() {
               <MobileNav activeTab={activeTab} onTabChange={handleTabChange} />
               
               {isAdminPanelOpen && <AdminPanel onClose={closeAdminPanel} />}
+              
+              <InstallPWA />
+              <OfflineIndicator />
               
               <Toaster />
             </div>
