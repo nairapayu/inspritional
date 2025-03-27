@@ -73,8 +73,8 @@ const Header = ({ activeTab, onTabChange, onToggleAdminPanel }: HeaderProps) => 
             <button 
               className={`px-4 py-4 text-sm font-medium border-b-2 ${
                 activeTab === "daily" 
-                  ? "text-primary border-primary" 
-                  : "text-secondary border-transparent hover:text-primary hover:border-primary"
+                  ? "text-primary border-primary font-bold" 
+                  : "text-gray-700 border-transparent hover:text-primary hover:border-primary"
               }`}
               onClick={() => onTabChange("daily")}
             >
@@ -83,8 +83,8 @@ const Header = ({ activeTab, onTabChange, onToggleAdminPanel }: HeaderProps) => 
             <button 
               className={`px-4 py-4 text-sm font-medium border-b-2 ${
                 activeTab === "discover" 
-                  ? "text-primary border-primary" 
-                  : "text-secondary border-transparent hover:text-primary hover:border-primary"
+                  ? "text-primary border-primary font-bold" 
+                  : "text-gray-700 border-transparent hover:text-primary hover:border-primary"
               }`}
               onClick={() => onTabChange("discover")}
             >
@@ -93,8 +93,8 @@ const Header = ({ activeTab, onTabChange, onToggleAdminPanel }: HeaderProps) => 
             <button 
               className={`px-4 py-4 text-sm font-medium border-b-2 ${
                 activeTab === "favorites" 
-                  ? "text-primary border-primary" 
-                  : "text-secondary border-transparent hover:text-primary hover:border-primary"
+                  ? "text-primary border-primary font-bold" 
+                  : "text-gray-700 border-transparent hover:text-primary hover:border-primary"
               }`}
               onClick={() => onTabChange("favorites")}
             >
@@ -103,8 +103,8 @@ const Header = ({ activeTab, onTabChange, onToggleAdminPanel }: HeaderProps) => 
             <button 
               className={`px-4 py-4 text-sm font-medium border-b-2 ${
                 activeTab === "settings" 
-                  ? "text-primary border-primary" 
-                  : "text-secondary border-transparent hover:text-primary hover:border-primary"
+                  ? "text-primary border-primary font-bold" 
+                  : "text-gray-700 border-transparent hover:text-primary hover:border-primary"
               }`}
               onClick={() => onTabChange("settings")}
             >

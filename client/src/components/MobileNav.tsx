@@ -16,7 +16,7 @@ const MobileNav = ({ activeTab, onTabChange }: MobileNavProps) => {
       <div className="grid grid-cols-4">
         <button 
           className={`flex flex-col items-center justify-center py-4 px-2 touch-manipulation ${
-            activeTab === "daily" ? "text-primary" : "text-secondary"
+            activeTab === "daily" ? "text-primary font-medium" : "text-gray-700"
           }`}
           onClick={() => onTabChange("daily")}
         >
@@ -26,7 +26,7 @@ const MobileNav = ({ activeTab, onTabChange }: MobileNavProps) => {
 
         <button 
           className={`flex flex-col items-center justify-center py-4 px-2 touch-manipulation ${
-            activeTab === "discover" ? "text-primary" : "text-secondary"
+            activeTab === "discover" ? "text-primary font-medium" : "text-gray-700"
           }`}
           onClick={() => onTabChange("discover")}
         >
@@ -36,7 +36,7 @@ const MobileNav = ({ activeTab, onTabChange }: MobileNavProps) => {
 
         <button 
           className={`flex flex-col items-center justify-center py-4 px-2 touch-manipulation ${
-            activeTab === "favorites" ? "text-primary" : "text-secondary"
+            activeTab === "favorites" ? "text-primary font-medium" : "text-gray-700"
           }`}
           onClick={() => onTabChange("favorites")}
         >
@@ -46,7 +46,7 @@ const MobileNav = ({ activeTab, onTabChange }: MobileNavProps) => {
 
         <button 
           className={`flex flex-col items-center justify-center py-4 px-2 touch-manipulation ${
-            activeTab === "settings" ? "text-primary" : "text-secondary"
+            activeTab === "settings" ? "text-primary font-medium" : "text-gray-700"
           }`}
           onClick={() => onTabChange("settings")}
         >
