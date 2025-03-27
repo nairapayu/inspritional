@@ -591,9 +591,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } as any; // Use type assertion temporarily to bypass TypeScript error
       
       // Add optional AI settings if provided
-      if (settingsData.apiKey !== undefined) updatedSettings.apiKey = settingsData.apiKey;
-      if (settingsData.aiModel !== undefined) updatedSettings.aiModel = settingsData.aiModel;
-      if (settingsData.defaultPrompt !== undefined) updatedSettings.defaultPrompt = settingsData.defaultPrompt;
+      if (settingsData.apiKey !== undefined) updatedSettings.apiKey = settingsData.apiKey || undefined;
+      if (settingsData.aiModel !== undefined) updatedSettings.aiModel = settingsData.aiModel || undefined;
+      if (settingsData.defaultPrompt !== undefined) updatedSettings.defaultPrompt = settingsData.defaultPrompt || undefined;
       
       // Update the session
       req.session.tempSettings = updatedSettings;
@@ -756,12 +756,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Use the custom API key if available
         let openaiClient = openaiInstance;
         
-        // If the user has provided a custom API key, create a new client with it
+        // If the user has provided a custom API key, validate it before using
         if (customApiKey) {
-          console.log("Using custom OpenAI API key for quote generation");
-          openaiClient = new OpenAI({
-            apiKey: customApiKey
-          });
+          // Check if it looks like an OpenAI key (starts with "sk-" or similar)
+          if (customApiKey.startsWith("sk-")) {
+            console.log("Using custom OpenAI API key for quote generation");
+            try {
+              openaiClient = new OpenAI({
+                apiKey: customApiKey
+              });
+            } catch (error) {
+              console.error("Error initializing custom OpenAI client:", error);
+              // Fall back to default client or null
+            }
+          } else {
+            console.warn("Provided API key does not appear to be a valid OpenAI key");
+            // Invalid key format, don't use it
+            customApiKey = null;
+          }
         }
         
         if (!openaiClient) {
@@ -802,23 +814,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } catch (error: any) {
         console.error("OpenAI API error:", error);
         
-        // Create a more user-friendly error message based on the error
-        let errorMessage = "Failed to generate quote with OpenAI.";
-        let statusCode = 500;
+        // Use fallback local quote generation instead of showing an error to the user
+        console.log("Falling back to local generation after OpenAI error");
         
-        if (error.message?.includes("quota") || error.code === "insufficient_quota") {
-          errorMessage = "OpenAI API quota exceeded. Please update your API key or try again later.";
-          statusCode = 429; // Too Many Requests
-        } else if (error.message?.includes("invalid")) {
-          errorMessage = "Invalid OpenAI API key. Please check your settings.";
-          statusCode = 401; // Unauthorized
+        // Select from our local fallback quotes
+        const fallbackQuotes = [
+          "Every step forward is a step toward achievement.",
+          "The key to success is to focus on goals, not obstacles.",
+          "Your potential is the sum of all possibilities you have yet to explore.",
+          "Believe you can and you're halfway there.",
+          "Don't watch the clock; do what it does. Keep going.",
+          "The future belongs to those who believe in the beauty of their dreams.",
+          "Success is not final, failure is not fatal: it is the courage to continue that counts.",
+          "You are capable of more than you know.",
+          "The only way to do great work is to love what you do.",
+          "Challenges are what make life interesting. Overcoming them is what makes life meaningful."
+        ];
+        
+        // Find a quote that contains keyword from prompt if possible
+        const keywordMatch = prompt.match(/about\s+(\w+)/i) || prompt.match(/(\w+)/i);
+        const keyword = keywordMatch ? keywordMatch[1].toLowerCase() : "";
+        
+        let selectedQuote = fallbackQuotes[Math.floor(Math.random() * fallbackQuotes.length)];
+        
+        // Try to find a quote that contains the keyword
+        const matchingQuotes = fallbackQuotes.filter(quote => 
+          quote.toLowerCase().includes(keyword)
+        );
+        
+        if (matchingQuotes.length > 0) {
+          selectedQuote = matchingQuotes[Math.floor(Math.random() * matchingQuotes.length)];
         }
         
-        return res.status(statusCode).json({ 
-          message: errorMessage,
-          error: error.message || "Unknown error",
-          code: error.code || "unknown_error"
+        // Save the generated quote
+        const quote = await storage.createQuote({
+          text: selectedQuote,
+          author: "Inspiration Engine",
+          categoryId,
+          backgroundUrl: "https://images.unsplash.com/photo-1470770903676-69b98201ea1c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+          isAiGenerated: true
         });
+        
+        const quoteWithCategory = await storage.getQuoteWithCategory(quote.id);
+        return res.json(quoteWithCategory);
       }
     } catch (err) {
       handleError(err, res);

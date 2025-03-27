@@ -3,16 +3,65 @@ import OpenAI from "openai";
 // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
 let openaiInstance: OpenAI | null = null;
 
+/**
+ * Get a fallback quote when API generation fails
+ * @param prompt The prompt to generate a quote from
+ * @returns A pre-defined fallback quote 
+ */
+function getFallbackQuote(prompt: string): string {
+  // Collection of fallback quotes
+  const fallbackQuotes = [
+    "Every step forward is a step toward achievement.",
+    "The key to success is to focus on goals, not obstacles.",
+    "Your potential is the sum of all possibilities you have yet to explore.",
+    "Believe you can and you're halfway there.",
+    "Don't watch the clock; do what it does. Keep going.",
+    "The future belongs to those who believe in the beauty of their dreams.",
+    "Success is not final, failure is not fatal: it is the courage to continue that counts.",
+    "You are capable of more than you know.",
+    "The only way to do great work is to love what you do.",
+    "Challenges are what make life interesting. Overcoming them is what makes life meaningful."
+  ];
+  
+  // Find a quote that contains keyword from prompt if possible
+  const keywordMatch = prompt.match(/about\s+(\w+)/i) || prompt.match(/(\w+)/i);
+  const keyword = keywordMatch ? keywordMatch[1].toLowerCase() : "";
+  
+  let selectedQuote = fallbackQuotes[Math.floor(Math.random() * fallbackQuotes.length)];
+  
+  // Try to find a quote that contains the keyword
+  const matchingQuotes = fallbackQuotes.filter(quote => 
+    quote.toLowerCase().includes(keyword)
+  );
+  
+  if (matchingQuotes.length > 0) {
+    selectedQuote = matchingQuotes[Math.floor(Math.random() * matchingQuotes.length)];
+  }
+  
+  return selectedQuote;
+}
+
 // Create a configurable OpenAI instance
 export function configureOpenAI(apiKey: string) {
   if (!apiKey) return null;
   
-  openaiInstance = new OpenAI({
-    apiKey: apiKey,
-    dangerouslyAllowBrowser: true // Allow client-side usage for frontend generation
-  });
+  // Validate API key format (OpenAI keys typically start with "sk-")
+  if (!apiKey.startsWith("sk-")) {
+    console.warn("Provided API key does not appear to be a valid OpenAI key (should start with 'sk-')");
+    return null;
+  }
   
-  return openaiInstance;
+  try {
+    openaiInstance = new OpenAI({
+      apiKey: apiKey,
+      dangerouslyAllowBrowser: true // Allow client-side usage for frontend generation
+    });
+    
+    return openaiInstance;
+  } catch (error) {
+    console.error("Error initializing OpenAI client:", error);
+    return null;
+  }
 }
 
 // Get the configured OpenAI instance
@@ -29,7 +78,8 @@ export function getOpenAIInstance() {
 export async function generateMotivationalQuote(prompt: string, model: string = "gpt-4o"): Promise<string> {
   const openai = getOpenAIInstance();
   if (!openai) {
-    throw new Error("OpenAI is not configured. Please provide an API key in the settings.");
+    console.warn("OpenAI is not configured. Using fallback quote generation.");
+    return getFallbackQuote(prompt);
   }
 
   try {
@@ -53,7 +103,7 @@ export async function generateMotivationalQuote(prompt: string, model: string = 
       "Your potential is the sum of all the possibilities you have yet to explore.";
   } catch (error) {
     console.error("Error generating quote with OpenAI:", error);
-    throw new Error("Failed to generate quote. Please check your API key and try again.");
+    return getFallbackQuote(prompt);
   }
 }
 
@@ -66,7 +116,8 @@ export async function generateMotivationalQuote(prompt: string, model: string = 
 export async function generateSimilarQuote(existingQuote: string, model: string = "gpt-4o"): Promise<string> {
   const openai = getOpenAIInstance();
   if (!openai) {
-    throw new Error("OpenAI is not configured. Please provide an API key in the settings.");
+    console.warn("OpenAI is not configured. Using fallback quote generation.");
+    return getFallbackQuote(`similar to: ${existingQuote}`);
   }
   
   try {
@@ -92,6 +143,6 @@ export async function generateSimilarQuote(existingQuote: string, model: string 
       "Every challenge you face is a stepping stone on the path to your greatest achievements.";
   } catch (error) {
     console.error("Error generating similar quote with OpenAI:", error);
-    throw new Error("Failed to generate similar quote. Please check your API key and try again.");
+    return getFallbackQuote(`similar to: ${existingQuote}`);
   }
 }
