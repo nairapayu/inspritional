@@ -67,6 +67,10 @@ export const settings = pgTable("settings", {
   textToSpeech: boolean("text_to_speech").default(false),
   enableNotifications: boolean("enable_notifications").default(true),
   selectedCategories: text("selected_categories").array(),
+  // AI Settings
+  apiKey: text("api_key"),
+  aiModel: text("ai_model").default("gpt-4o"),
+  defaultPrompt: text("default_prompt").default("Create a motivational quote that inspires action and positive change."),
 });
 
 export const insertSettingsSchema = createInsertSchema(settings).pick({
@@ -77,6 +81,16 @@ export const insertSettingsSchema = createInsertSchema(settings).pick({
   textToSpeech: true,
   enableNotifications: true,
   selectedCategories: true,
+  apiKey: true,
+  aiModel: true,
+  defaultPrompt: true,
+});
+
+// AI Settings schema for validation
+export const aiSettingsSchema = z.object({
+  apiKey: z.string().optional(),
+  aiModel: z.string().default("gpt-4o"),
+  defaultPrompt: z.string().default("Create a motivational quote that inspires action and positive change."),
 });
 
 // Types

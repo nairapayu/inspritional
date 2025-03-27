@@ -6,7 +6,8 @@ import {
   insertCategorySchema, 
   insertFavoriteSchema,
   insertUserSchema,
-  insertSettingsSchema
+  insertSettingsSchema,
+  aiSettingsSchema
 } from "@shared/schema";
 import { ZodError } from "zod";
 import OpenAI from "openai";
@@ -511,6 +512,68 @@ export async function registerRoutes(app: Express): Promise<Server> {
       handleError(err, res);
     }
   });
+  
+  /**
+   * AI Settings Routes
+   */
+  app.get("/api/settings/ai", async (req: Request, res: Response) => {
+    try {
+      // Check if user is logged in
+      if (!req.session?.userId) {
+        return res.status(401).json({ message: "Login required" });
+      }
+      
+      const userId = req.session.userId;
+      const settings = await storage.getSettings(userId);
+      
+      // If no settings found, return defaults
+      if (!settings) {
+        return res.json({
+          apiKey: "",
+          aiModel: "gpt-4o",
+          defaultPrompt: "Create a motivational quote that inspires action and positive change."
+        });
+      }
+      
+      // Return only AI related settings
+      res.json({
+        apiKey: settings.apiKey || "",
+        aiModel: settings.aiModel || "gpt-4o",
+        defaultPrompt: settings.defaultPrompt || "Create a motivational quote that inspires action and positive change."
+      });
+    } catch (err) {
+      handleError(err, res);
+    }
+  });
+  
+  app.post("/api/settings/ai", async (req: Request, res: Response) => {
+    try {
+      // Check if user is logged in
+      if (!req.session?.userId) {
+        return res.status(401).json({ message: "Login required" });
+      }
+      
+      const userId = req.session.userId;
+      const aiSettings = aiSettingsSchema.parse(req.body);
+      
+      // Update only AI settings
+      const settings = await storage.createOrUpdateSettings(userId, {
+        userId,
+        apiKey: aiSettings.apiKey,
+        aiModel: aiSettings.aiModel,
+        defaultPrompt: aiSettings.defaultPrompt
+      });
+      
+      // Return only AI related settings
+      res.json({
+        apiKey: settings.apiKey || "",
+        aiModel: settings.aiModel || "gpt-4o",
+        defaultPrompt: settings.defaultPrompt || "Create a motivational quote that inspires action and positive change."
+      });
+    } catch (err) {
+      handleError(err, res);
+    }
+  });
 
   /**
    * AI Quote Generation
@@ -533,14 +596,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
+      // Get AI settings or use defaults if user not logged in or settings not found
+      let aiModel = "gpt-4o";
+      let defaultPrompt = "Create an original, inspiring quote based on the given prompt. Keep it concise (under 150 characters) and profound.";
+      
+      // If user is logged in, get their settings
+      if (req.session?.userId) {
+        const settings = await storage.getSettings(req.session.userId);
+        if (settings) {
+          // Use API key from environment variable if not provided in settings
+          aiModel = settings.aiModel || "gpt-4o";
+          defaultPrompt = settings.defaultPrompt || defaultPrompt;
+        }
+      }
+      
       try {
         // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+        const openai = new OpenAI({
+          apiKey: process.env.OPENAI_API_KEY
+        });
+        
         const response = await openai.chat.completions.create({
-          model: "gpt-4o",
+          model: aiModel,
           messages: [
             {
               role: "system",
-              content: "You are a motivational quotes generator. Create an original, inspiring quote based on the given prompt. Keep it concise (under 150 characters) and profound. Do not include any quotation marks in your response. Just return the quote text and nothing else."
+              content: "You are a motivational quotes generator. " + defaultPrompt + " Do not include any quotation marks in your response. Just return the quote text and nothing else."
             },
             {
               role: "user",
@@ -568,18 +649,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } catch (error) {
         console.error("OpenAI API error:", error);
         
-        // Fallback response if OpenAI API fails
-        const quote = await storage.createQuote({
-          text: "Your potential is the sum of all the possibilities you have yet to explore.",
-          author: "AI Generated",
-          categoryId,
-          backgroundUrl: "https://images.unsplash.com/photo-1470770903676-69b98201ea1c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-          isAiGenerated: true
+        return res.status(500).json({ 
+          message: "Failed to generate quote with OpenAI. Please check your API key in settings.",
+          error: error.message
         });
-        
-        const quoteWithCategory = await storage.getQuoteWithCategory(quote.id);
-        
-        res.json(quoteWithCategory);
       }
     } catch (err) {
       handleError(err, res);

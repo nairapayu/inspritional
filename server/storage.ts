@@ -344,7 +344,10 @@ export class MemStorage implements IStorage {
         language: "en",
         textToSpeech: false,
         enableNotifications: true,
-        selectedCategories: []
+        selectedCategories: [],
+        apiKey: null,
+        aiModel: "gpt-4o",
+        defaultPrompt: "Create a motivational quote that inspires action and positive change."
       };
       
       const newSettings = { ...defaultSettings, ...settingsData };

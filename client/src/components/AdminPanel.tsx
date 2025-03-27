@@ -52,6 +52,11 @@ const AdminPanel = ({ onClose }: AdminPanelProps) => {
   const [deletingQuoteId, setDeletingQuoteId] = useState<number | null>(null);
   const [newCategoryName, setNewCategoryName] = useState("");
   
+  // AI Settings state
+  const [apiKey, setApiKey] = useState("");
+  const [aiModel, setAiModel] = useState("gpt-4o");
+  const [defaultPrompt, setDefaultPrompt] = useState("Create a motivational quote that inspires action and positive change.");
+  
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
@@ -72,6 +77,23 @@ const AdminPanel = ({ onClose }: AdminPanelProps) => {
   } = useQuery<Category[]>({
     queryKey: ['/api/categories'],
   });
+  
+  // Fetch AI settings
+  const { 
+    data: aiSettings,
+    isLoading: isLoadingAiSettings
+  } = useQuery({
+    queryKey: ['/api/settings/ai']
+  });
+  
+  // Effect to update state when AI settings are loaded
+  useEffect(() => {
+    if (aiSettings) {
+      setApiKey(aiSettings.apiKey || "");
+      setAiModel(aiSettings.aiModel || "gpt-4o");
+      setDefaultPrompt(aiSettings.defaultPrompt || "Create a motivational quote that inspires action and positive change.");
+    }
+  }, [aiSettings]);
   
   // Add quote mutation
   const addQuoteMutation = useMutation({
@@ -157,6 +179,25 @@ const AdminPanel = ({ onClose }: AdminPanelProps) => {
     }
   });
   
+  // Save AI settings mutation
+  const saveAiSettingsMutation = useMutation({
+    mutationFn: (data: { apiKey: string; aiModel: string; defaultPrompt: string }) => {
+      return apiRequest('POST', '/api/settings/ai', data);
+    },
+    onSuccess: () => {
+      toast({
+        title: "AI settings saved successfully",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error saving AI settings",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
+  
   // Handle quote submission from form
   const handleQuoteSubmit = (data: any) => {
     if (editingQuote) {
@@ -184,6 +225,15 @@ const AdminPanel = ({ onClose }: AdminPanelProps) => {
     if (deletingQuoteId !== null) {
       deleteQuoteMutation.mutate(deletingQuoteId);
     }
+  };
+  
+  // Handle saving AI settings
+  const handleSaveAiSettings = () => {
+    saveAiSettingsMutation.mutate({
+      apiKey,
+      aiModel,
+      defaultPrompt
+    });
   };
   
   return (
@@ -385,7 +435,13 @@ const AdminPanel = ({ onClose }: AdminPanelProps) => {
                     <div className="grid grid-cols-1 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="api-key">OpenAI API Key</Label>
-                        <Input id="api-key" type="password" placeholder="Enter your OpenAI API key" />
+                        <Input 
+                          id="api-key" 
+                          type="password" 
+                          placeholder="Enter your OpenAI API key" 
+                          value={apiKey}
+                          onChange={(e) => setApiKey(e.target.value)}
+                        />
                         <p className="text-xs text-gray-500">
                           This key is used for generating AI quotes. Keep it secure.
                         </p>
@@ -393,7 +449,10 @@ const AdminPanel = ({ onClose }: AdminPanelProps) => {
                       
                       <div className="space-y-2">
                         <Label htmlFor="ai-model">AI Model</Label>
-                        <Select defaultValue="gpt-4o">
+                        <Select 
+                          value={aiModel} 
+                          onValueChange={(value) => setAiModel(value)}
+                        >
                           <SelectTrigger id="ai-model">
                             <SelectValue placeholder="Select model" />
                           </SelectTrigger>
@@ -411,14 +470,19 @@ const AdminPanel = ({ onClose }: AdminPanelProps) => {
                           id="ai-prompt" 
                           placeholder="Enter default prompt for AI quote generation"
                           className="min-h-[100px]"
-                          defaultValue="Create a motivational quote that inspires action and positive change."
+                          value={defaultPrompt}
+                          onChange={(e) => setDefaultPrompt(e.target.value)}
                         />
                       </div>
                     </div>
                   </div>
                   
-                  <Button className="bg-primary text-white">
-                    Save AI Settings
+                  <Button 
+                    className="bg-primary text-white"
+                    onClick={handleSaveAiSettings}
+                    disabled={saveAiSettingsMutation.isPending}
+                  >
+                    {saveAiSettingsMutation.isPending ? 'Saving...' : 'Save AI Settings'}
                   </Button>
                 </div>
               </TabsContent>
