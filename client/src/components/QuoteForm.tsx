@@ -98,8 +98,8 @@ const QuoteForm = ({ quote, categories, onSubmit, isSubmitting = false }: QuoteF
             <FormItem>
               <FormLabel>Category</FormLabel>
               <Select
-                onValueChange={(value) => field.onChange(value ? parseInt(value) : null)}
-                value={field.value?.toString() || ""}
+                onValueChange={(value) => field.onChange(value === "0" ? null : parseInt(value))}
+                value={field.value?.toString() || "0"}
               >
                 <FormControl>
                   <SelectTrigger>
@@ -107,7 +107,7 @@ const QuoteForm = ({ quote, categories, onSubmit, isSubmitting = false }: QuoteF
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="">None</SelectItem>
+                  <SelectItem value="0">None</SelectItem>
                   {categories.map((category) => (
                     <SelectItem key={category.id} value={category.id.toString()}>
                       {category.name}
