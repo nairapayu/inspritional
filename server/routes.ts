@@ -12,6 +12,14 @@ import {
 import { ZodError } from "zod";
 import OpenAI from "openai";
 
+// Extend Express Request type to include session
+declare module "express-session" {
+  interface SessionData {
+    userId?: number;
+    isAdmin?: boolean;
+  }
+}
+
 // Initialize OpenAI API
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY || "sk-dummy-key-for-development"
