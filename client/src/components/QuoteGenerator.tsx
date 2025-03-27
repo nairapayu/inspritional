@@ -50,10 +50,15 @@ const QuoteGenerator = ({ categoryId, onQuoteGenerated }: QuoteGeneratorProps) =
       // Clear the input field
       setKeyword("");
     },
-    onError: (error) => {
+    onError: (error: any) => {
+      const errorMessage = 
+        error.message?.includes("quota") 
+          ? "API quota exceeded. Please try again later or update your API key in settings."
+          : error.message || "An unexpected error occurred";
+      
       toast({
         title: "Failed to generate quote",
-        description: error.message,
+        description: errorMessage,
         variant: "destructive"
       });
     }

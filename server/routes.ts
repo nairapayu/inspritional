@@ -77,7 +77,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       req.session.userId = user.id;
-      req.session.isAdmin = user.isAdmin;
+      req.session.isAdmin = user.isAdmin || false;
       
       return res.status(200).json({ 
         id: user.id, 
@@ -150,9 +150,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         id: user.id,
         username: user.username,
         isAdmin: user.isAdmin,
-        email: settings?.email || null,
-        notifications: settings?.notificationsEnabled || false,
-        bio: settings?.bio || ""
+        language: settings?.language || "en",
+        enableNotifications: settings?.enableNotifications || false,
+        theme: settings?.theme || "light",
+        font: settings?.font || "playfair"
       });
     } catch (err) {
       return handleError(err, res);
@@ -172,7 +173,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Unauthorized to update this profile" });
       }
       
-      const { username, email, notifications, bio } = req.body;
+      const { username, theme, font, language, textToSpeech, enableNotifications, selectedCategories } = req.body;
       
       // Update username if provided
       if (username) {
@@ -182,12 +183,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Update user settings
       await storage.createOrUpdateSettings(userId, {
-        email: email || null,
-        notificationsEnabled: notifications || false,
-        bio: bio || null,
-        theme: "light", // Default values for required fields
-        language: "en",
-        selectedCategories: []
+        theme: theme || "light",
+        font: font || "playfair",
+        language: language || "en",
+        textToSpeech: textToSpeech || false,
+        enableNotifications: enableNotifications || false,
+        selectedCategories: selectedCategories || []
       });
       
       res.json({
@@ -596,12 +597,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Find category id if category name provided
       let categoryId = null;
-      if (category) {
+      if (category && typeof category === 'string') {
         const categories = await storage.getCategories();
         const foundCategory = categories.find(c => c.name.toLowerCase() === category.toLowerCase());
         if (foundCategory) {
           categoryId = foundCategory.id;
         }
+      } else if (category && typeof category === 'number') {
+        // If category is already a number, use it directly
+        categoryId = category;
       }
       
       // Get AI settings or use defaults if user not logged in or settings not found
@@ -654,12 +658,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const quoteWithCategory = await storage.getQuoteWithCategory(quote.id);
         
         res.json(quoteWithCategory);
-      } catch (error) {
+      } catch (error: any) {
         console.error("OpenAI API error:", error);
         
-        return res.status(500).json({ 
-          message: "Failed to generate quote with OpenAI. Please check your API key in settings.",
-          error: error.message
+        // Create a more user-friendly error message based on the error
+        let errorMessage = "Failed to generate quote with OpenAI.";
+        let statusCode = 500;
+        
+        if (error.message?.includes("quota") || error.code === "insufficient_quota") {
+          errorMessage = "OpenAI API quota exceeded. Please update your API key or try again later.";
+          statusCode = 429; // Too Many Requests
+        } else if (error.message?.includes("invalid")) {
+          errorMessage = "Invalid OpenAI API key. Please check your settings.";
+          statusCode = 401; // Unauthorized
+        }
+        
+        return res.status(statusCode).json({ 
+          message: errorMessage,
+          error: error.message || "Unknown error",
+          code: error.code || "unknown_error"
         });
       }
     } catch (err) {
