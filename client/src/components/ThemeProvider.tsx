@@ -60,6 +60,7 @@ export const TRANSLATIONS = {
     favorite: 'Favorite',
     speak: 'Speak',
     generate: 'Generate',
+    appearance: 'Appearance',
   },
   es: {
     daily: 'Cita Diaria',
@@ -82,6 +83,7 @@ export const TRANSLATIONS = {
     favorite: 'Favorito',
     speak: 'Hablar',
     generate: 'Generar',
+    appearance: 'Apariencia',
   },
   fr: {
     daily: 'Citation du Jour',
@@ -104,6 +106,7 @@ export const TRANSLATIONS = {
     favorite: 'Favori',
     speak: 'Parler',
     generate: 'Générer',
+    appearance: 'Apparence',
   },
   de: {
     daily: 'Tägliches Zitat',
@@ -126,6 +129,7 @@ export const TRANSLATIONS = {
     favorite: 'Favorit',
     speak: 'Sprechen',
     generate: 'Generieren',
+    appearance: 'Erscheinungsbild',
   },
   zh: {
     daily: '每日引言',
@@ -148,6 +152,7 @@ export const TRANSLATIONS = {
     favorite: '收藏',
     speak: '朗读',
     generate: '生成',
+    appearance: '外观',
   },
   hi: {
     daily: 'दैनिक उद्धरण',
@@ -170,6 +175,7 @@ export const TRANSLATIONS = {
     favorite: 'पसंदीदा',
     speak: 'बोलें',
     generate: 'उत्पन्न',
+    appearance: 'स्वरूप',
   },
   ur: {
     daily: 'روزانہ اقتباس',
@@ -192,6 +198,7 @@ export const TRANSLATIONS = {
     favorite: 'پسندیدہ',
     speak: 'بولیں',
     generate: 'بنائیں',
+    appearance: 'ظاہری شکل',
   }
 };
 
@@ -200,7 +207,10 @@ let currentLanguage = 'en';
 
 // Expose translation function
 export function t(key: string): string {
-  return TRANSLATIONS[currentLanguage as keyof typeof TRANSLATIONS]?.[key as keyof (typeof TRANSLATIONS)['en']] || key;
+  const lang = currentLanguage as keyof typeof TRANSLATIONS;
+  // Make sure the language exists in our translations, fallback to 'en'
+  const translations = TRANSLATIONS[lang] || TRANSLATIONS.en;
+  return translations[key as keyof (typeof TRANSLATIONS)['en']] || key;
 }
 
 interface ThemeProviderProps {
@@ -210,9 +220,14 @@ interface ThemeProviderProps {
 const ThemeProvider = ({ children }: ThemeProviderProps) => {
   const { settings } = useSettings();
 
+  // Apply settings changes immediately
   useEffect(() => {
     if (!settings) return;
 
+    // Update current language for translations immediately
+    currentLanguage = settings.language || 'en';
+    console.log("Language changed to:", currentLanguage);
+    
     // Apply theme colors to CSS variables
     const theme = settings.theme || 'light';
     const colors = THEME_COLORS[theme as keyof typeof THEME_COLORS] || THEME_COLORS.light;
@@ -231,8 +246,9 @@ const ThemeProvider = ({ children }: ThemeProviderProps) => {
     
     document.body.className = fontClass;
     
-    // Set current language for translations
-    currentLanguage = settings.language || 'en';
+    // Force re-render by making a small DOM change to trigger updates
+    const event = new Event('settingsChanged');
+    document.dispatchEvent(event);
     
   }, [settings]);
 

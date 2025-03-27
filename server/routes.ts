@@ -17,6 +17,15 @@ declare module "express-session" {
   interface SessionData {
     userId?: number;
     isAdmin?: boolean;
+    tempSettings?: {
+      theme: string;
+      font: string;
+      language: string;
+      textToSpeech: boolean;
+      enableNotifications: boolean;
+      selectedCategories: string[];
+      [key: string]: any;
+    };
   }
 }
 
@@ -491,27 +500,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
    */
   app.get("/api/settings", async (req: Request, res: Response) => {
     try {
-      // Check if user is logged in
-      if (!req.session?.userId) {
-        return res.status(401).json({ message: "Login required" });
+      // If user is logged in, return their settings
+      if (req.session?.userId) {
+        const settings = await storage.getSettings(req.session.userId);
+        
+        if (settings) {
+          return res.json(settings);
+        }
       }
       
-      const settings = await storage.getSettings(req.session.userId);
-      
-      if (!settings) {
-        // Return default settings if not found
-        const defaultSettings = {
-          theme: "light",
-          font: "playfair",
-          language: "en",
-          textToSpeech: false,
-          enableNotifications: true,
-          selectedCategories: []
-        };
-        return res.json(defaultSettings);
+      // For non-logged in users or if settings not found, return default settings
+      // Check if we have session settings
+      if (req.session?.tempSettings) {
+        return res.json(req.session.tempSettings);
       }
       
-      res.json(settings);
+      // Return default settings
+      const defaultSettings = {
+        theme: "light",
+        font: "playfair",
+        language: "en",
+        textToSpeech: false,
+        enableNotifications: true,
+        selectedCategories: []
+      };
+      
+      return res.json(defaultSettings);
     } catch (err) {
       handleError(err, res);
     }
@@ -519,20 +533,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/settings", async (req: Request, res: Response) => {
     try {
-      // Check if user is logged in
-      if (!req.session?.userId) {
-        return res.status(401).json({ message: "Login required" });
-      }
-      
-      const userId = req.session.userId;
       const settingsData = insertSettingsSchema.partial().parse(req.body);
       
-      const settings = await storage.createOrUpdateSettings(userId, {
-        ...settingsData,
-        userId
-      });
+      // If user is logged in, save to database
+      if (req.session?.userId) {
+        const userId = req.session.userId;
+        const settings = await storage.createOrUpdateSettings(userId, {
+          ...settingsData,
+          userId
+        });
+        
+        return res.json(settings);
+      }
       
-      res.json(settings);
+      // For anonymous users, store in session
+      if (!req.session) {
+        return res.status(500).json({ message: "Session not available" });
+      }
+      
+      // Create tempSettings if it doesn't exist
+      if (!req.session.tempSettings) {
+        req.session.tempSettings = {
+          theme: "light",
+          font: "playfair",
+          language: "en",
+          textToSpeech: false,
+          enableNotifications: true,
+          selectedCategories: []
+        };
+      }
+      
+      // Update temp settings
+      req.session.tempSettings = {
+        ...req.session.tempSettings,
+        ...settingsData
+      };
+      
+      return res.json(req.session.tempSettings);
     } catch (err) {
       handleError(err, res);
     }

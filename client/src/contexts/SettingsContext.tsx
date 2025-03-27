@@ -95,6 +95,13 @@ export const SettingsContextProvider = ({ children }: SettingsContextProviderPro
   const saveSettings = () => {
     if (settings) {
       saveSettingsMutation.mutate(settings);
+      
+      // For immediate update without waiting for the server response
+      // This helps make language and theme changes take effect immediately
+      if (settings) {
+        const event = new Event('settingsUpdated');
+        document.dispatchEvent(event);
+      }
     }
   };
 

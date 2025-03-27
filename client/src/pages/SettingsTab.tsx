@@ -84,13 +84,13 @@ const SettingsTab = () => {
   return (
     <div className="container mx-auto px-4 py-6">
       <div className="space-y-6">
-        <h2 className="text-xl font-medium text-textColor">App Settings</h2>
+        <h2 className="text-xl font-medium text-textColor">{t('settings')}</h2>
 
         <Card className="rounded-custom shadow-md overflow-hidden">
           {/* Appearance Settings */}
           <div className="border-b border-gray-100">
             <CardContent className="p-5">
-              <h3 className="font-medium mb-4">Appearance</h3>
+              <h3 className="font-medium mb-4">{t('appearance')}</h3>
               
               {/* Theme Selection */}
               <div className="space-y-5">
@@ -136,7 +136,7 @@ const SettingsTab = () => {
                 
                 {/* Font Settings */}
                 <div>
-                  <Label className="block text-sm font-medium mb-2">Quote Font</Label>
+                  <Label className="block text-sm font-medium mb-2">{t('font')}</Label>
                   <div className="grid grid-cols-3 gap-3">
                     <button 
                       className={`py-2 px-3 rounded-custom ${
