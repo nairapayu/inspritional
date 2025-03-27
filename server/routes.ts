@@ -24,6 +24,9 @@ declare module "express-session" {
       textToSpeech: boolean;
       enableNotifications: boolean;
       selectedCategories: string[];
+      apiKey?: string;
+      aiModel?: string;
+      defaultPrompt?: string;
       [key: string]: any;
     };
   }
@@ -31,6 +34,7 @@ declare module "express-session" {
 
 // Initialize OpenAI API with environment variable
 let openaiInstance: OpenAI | null = null;
+let customApiKey: string | null = null;
 
 // Debug: Log the API key format (safely)
 if (process.env.OPENAI_API_KEY) {
@@ -563,11 +567,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
         };
       }
       
-      // Update temp settings
-      req.session.tempSettings = {
+      // Create default temp settings if they don't exist
+      if (!req.session.tempSettings) {
+        req.session.tempSettings = {
+          theme: "light",
+          font: "Poppins",
+          language: "en",
+          textToSpeech: false as boolean,  // Explicit type cast
+          enableNotifications: false as boolean,  // Explicit type cast
+          selectedCategories: [],
+        };
+      }
+      
+      // Update temp settings with safe defaults for null values - using type assertion
+      const updatedSettings: typeof req.session.tempSettings = {
         ...req.session.tempSettings,
-        ...settingsData
-      };
+        theme: settingsData.theme ?? req.session.tempSettings.theme ?? "light",
+        font: settingsData.font ?? req.session.tempSettings.font ?? "Poppins",
+        language: settingsData.language ?? req.session.tempSettings.language ?? "en",
+        textToSpeech: settingsData.textToSpeech !== null ? !!settingsData.textToSpeech : (!!req.session.tempSettings.textToSpeech),
+        enableNotifications: settingsData.enableNotifications !== null ? !!settingsData.enableNotifications : (!!req.session.tempSettings.enableNotifications),
+        selectedCategories: settingsData.selectedCategories ?? req.session.tempSettings.selectedCategories ?? [],
+      } as any; // Use type assertion temporarily to bypass TypeScript error
+      
+      // Add optional AI settings if provided
+      if (settingsData.apiKey !== undefined) updatedSettings.apiKey = settingsData.apiKey;
+      if (settingsData.aiModel !== undefined) updatedSettings.aiModel = settingsData.aiModel;
+      if (settingsData.defaultPrompt !== undefined) updatedSettings.defaultPrompt = settingsData.defaultPrompt;
+      
+      // Update the session
+      req.session.tempSettings = updatedSettings;
       
       return res.json(req.session.tempSettings);
     } catch (err) {
@@ -617,6 +646,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const userId = req.session.userId;
       const aiSettings = aiSettingsSchema.parse(req.body);
+      
+      // Save the API key to our global variable for future OpenAI calls
+      if (aiSettings.apiKey && aiSettings.apiKey.trim() !== '') {
+        customApiKey = aiSettings.apiKey.trim();
+        console.log(`User provided a custom OpenAI API key`);
+      }
       
       // Update only AI settings
       const settings = await storage.createOrUpdateSettings(userId, {
@@ -718,8 +753,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       try {
+        // Use the custom API key if available
+        let openaiClient = openaiInstance;
+        
+        // If the user has provided a custom API key, create a new client with it
+        if (customApiKey) {
+          console.log("Using custom OpenAI API key for quote generation");
+          openaiClient = new OpenAI({
+            apiKey: customApiKey
+          });
+        }
+        
+        if (!openaiClient) {
+          throw new Error("OpenAI client is not initialized");
+        }
+        
         // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
-        const response = await openaiInstance.chat.completions.create({
+        const response = await openaiClient.chat.completions.create({
           model: aiModel,
           messages: [
             {

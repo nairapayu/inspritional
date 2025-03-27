@@ -151,7 +151,7 @@ const QuoteForm = ({ quote, categories, onSubmit, isSubmitting = false }: QuoteF
               </div>
               <FormControl>
                 <Switch
-                  checked={field.value}
+                  checked={!!field.value}
                   onCheckedChange={field.onChange}
                 />
               </FormControl>
