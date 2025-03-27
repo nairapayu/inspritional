@@ -20,10 +20,26 @@ declare module "express-session" {
   }
 }
 
-// Initialize OpenAI API
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY || "sk-dummy-key-for-development"
-});
+// Initialize OpenAI API with environment variable
+let openaiInstance: OpenAI | null = null;
+
+// Debug: Log the API key format (safely)
+if (process.env.OPENAI_API_KEY) {
+  const keyPrefix = process.env.OPENAI_API_KEY.substring(0, 7);
+  const keyLength = process.env.OPENAI_API_KEY.length;
+  console.log(`OpenAI API key found. Format: ${keyPrefix}...${keyLength} chars`);
+} else {
+  console.error("No OpenAI API key found in environment variables");
+}
+
+try {
+  openaiInstance = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY
+  });
+  console.log("OpenAI client initialized successfully");
+} catch (err) {
+  console.error("Error initializing OpenAI:", err);
+}
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Error handling middleware
@@ -622,13 +638,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
+      // Check if OpenAI is initialized
+      if (!openaiInstance) {
+        return res.status(500).json({ message: "OpenAI API not available. Please check the API key." });
+      }
+      
       try {
         // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
-        const openai = new OpenAI({
-          apiKey: process.env.OPENAI_API_KEY
-        });
-        
-        const response = await openai.chat.completions.create({
+        const response = await openaiInstance.chat.completions.create({
           model: aiModel,
           messages: [
             {
