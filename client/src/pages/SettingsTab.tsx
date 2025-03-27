@@ -237,6 +237,8 @@ const SettingsTab = () => {
                       <SelectItem value="fr">French</SelectItem>
                       <SelectItem value="de">German</SelectItem>
                       <SelectItem value="zh">Chinese</SelectItem>
+                      <SelectItem value="hi">Hindi</SelectItem>
+                      <SelectItem value="ur">Urdu</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
