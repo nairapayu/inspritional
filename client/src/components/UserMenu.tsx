@@ -26,6 +26,7 @@ interface UserMenuProps {
 
 const UserMenu = ({ user, onToggleAdmin }: UserMenuProps) => {
   const { toast } = useToast();
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
   
   const logoutMutation = useMutation({
     mutationFn: () => {
@@ -62,48 +63,60 @@ const UserMenu = ({ user, onToggleAdmin }: UserMenuProps) => {
   };
   
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="rounded-full p-0 w-8 h-8">
-          <Avatar className="h-8 w-8 bg-primary text-white">
-            <AvatarFallback>{getInitials(user.username)}</AvatarFallback>
-          </Avatar>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-48">
-        <DropdownMenuLabel>{user.username}</DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem className="cursor-pointer">
-          <User className="mr-2 h-4 w-4" />
-          <span>Profile</span>
-        </DropdownMenuItem>
-        <DropdownMenuItem 
-          className="cursor-pointer"
-          onClick={() => window.location.hash = "settings"}
-        >
-          <Settings className="mr-2 h-4 w-4" />
-          <span>Settings</span>
-        </DropdownMenuItem>
-        {user.isAdmin && (
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" className="rounded-full p-0 w-8 h-8">
+            <Avatar className="h-8 w-8 bg-primary text-white">
+              <AvatarFallback>{getInitials(user.username)}</AvatarFallback>
+            </Avatar>
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-48">
+          <DropdownMenuLabel>{user.username}</DropdownMenuLabel>
+          <DropdownMenuSeparator />
           <DropdownMenuItem 
             className="cursor-pointer"
-            onClick={onToggleAdmin}
+            onClick={() => setIsProfileOpen(true)}
           >
-            <i className="bx bx-slider-alt mr-2"></i>
-            <span>Admin Panel</span>
+            <User className="mr-2 h-4 w-4" />
+            <span>Profile</span>
           </DropdownMenuItem>
-        )}
-        <DropdownMenuSeparator />
-        <DropdownMenuItem 
-          className="cursor-pointer text-red-500 focus:text-red-500"
-          onClick={handleLogout}
-          disabled={logoutMutation.isPending}
-        >
-          <LogOut className="mr-2 h-4 w-4" />
-          <span>Log out</span>
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+          <DropdownMenuItem 
+            className="cursor-pointer"
+            onClick={() => window.location.hash = "settings"}
+          >
+            <Settings className="mr-2 h-4 w-4" />
+            <span>Settings</span>
+          </DropdownMenuItem>
+          {user.isAdmin && (
+            <DropdownMenuItem 
+              className="cursor-pointer"
+              onClick={onToggleAdmin}
+            >
+              <i className="bx bx-slider-alt mr-2"></i>
+              <span>Admin Panel</span>
+            </DropdownMenuItem>
+          )}
+          <DropdownMenuSeparator />
+          <DropdownMenuItem 
+            className="cursor-pointer text-red-500 focus:text-red-500"
+            onClick={handleLogout}
+            disabled={logoutMutation.isPending}
+          >
+            <LogOut className="mr-2 h-4 w-4" />
+            <span>Log out</span>
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+      
+      {/* Profile Dialog */}
+      <ProfileDialog 
+        open={isProfileOpen} 
+        onClose={() => setIsProfileOpen(false)} 
+        userId={user.id} 
+      />
+    </>
   );
 };
 

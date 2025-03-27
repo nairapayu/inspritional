@@ -92,6 +92,103 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(200).json({ message: "Not logged in" });
     }
   });
+  
+  app.get("/api/me", async (req: Request, res: Response) => {
+    try {
+      if (!req.session?.userId) {
+        return res.status(401).json({ message: "Not logged in" });
+      }
+      
+      const user = await storage.getUser(req.session.userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      res.json({ 
+        id: user.id,
+        username: user.username,
+        isAdmin: user.isAdmin
+      });
+    } catch (err) {
+      return handleError(err, res);
+    }
+  });
+  
+  app.get("/api/users/:id", async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.params.id);
+      
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: "Invalid user ID" });
+      }
+      
+      // Make sure the user can only get their own profile
+      if (req.session?.userId !== userId) {
+        return res.status(403).json({ message: "Unauthorized to access this profile" });
+      }
+      
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Get the user's settings
+      const settings = await storage.getSettings(userId);
+      
+      res.json({
+        id: user.id,
+        username: user.username,
+        isAdmin: user.isAdmin,
+        email: settings?.email || null,
+        notifications: settings?.notificationsEnabled || false,
+        bio: settings?.bio || ""
+      });
+    } catch (err) {
+      return handleError(err, res);
+    }
+  });
+  
+  app.put("/api/users/:id", async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.params.id);
+      
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: "Invalid user ID" });
+      }
+      
+      // Make sure the user can only update their own profile
+      if (req.session?.userId !== userId) {
+        return res.status(403).json({ message: "Unauthorized to update this profile" });
+      }
+      
+      const { username, email, notifications, bio } = req.body;
+      
+      // Update username if provided
+      if (username) {
+        // For now, we'll skip implementation since we're using MemStorage
+        // In a real app, you would update the user's username here
+      }
+      
+      // Update user settings
+      await storage.createOrUpdateSettings(userId, {
+        email: email || null,
+        notificationsEnabled: notifications || false,
+        bio: bio || null,
+        theme: "light", // Default values for required fields
+        language: "en",
+        selectedCategories: []
+      });
+      
+      res.json({
+        success: true,
+        message: "Profile updated successfully"
+      });
+    } catch (err) {
+      return handleError(err, res);
+    }
+  });
 
   /**
    * Quote Routes
