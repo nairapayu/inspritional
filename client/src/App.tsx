@@ -10,6 +10,7 @@ import DiscoverTab from "./pages/DiscoverTab";
 import FavoritesTab from "./pages/FavoritesTab";
 import SettingsTab from "./pages/SettingsTab";
 import LoginPage from "./pages/LoginPage";
+import RegisterPage from "./pages/RegisterPage";
 import { useState, useEffect } from "react";
 import { QuoteContextProvider } from "./contexts/QuoteContext";
 import { SettingsContextProvider } from "./contexts/SettingsContext";
@@ -33,6 +34,10 @@ function App() {
       
       if (hash === "login") {
         setActiveTab("login");
+      }
+      
+      if (hash === "register") {
+        setActiveTab("register");
       }
     };
 
@@ -70,6 +75,8 @@ function App() {
             <main className="flex-1 overflow-auto pb-16 sm:pb-0">
               {activeTab === "login" ? (
                 <LoginPage />
+              ) : activeTab === "register" ? (
+                <RegisterPage />
               ) : (
                 <>
                   {activeTab === "daily" && <DailyQuoteTab />}

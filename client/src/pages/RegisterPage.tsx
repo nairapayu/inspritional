@@ -4,17 +4,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
-const LoginPage = () => {
+const RegisterPage = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const { toast } = useToast();
 
-  const loginMutation = useMutation({
+  const registerMutation = useMutation({
     mutationFn: async (credentials: { username: string; password: string }) => {
-      return fetch("/api/login", {
+      return fetch("/api/users", {
         method: "POST",
         body: JSON.stringify(credentials),
         headers: {
@@ -22,57 +22,68 @@ const LoginPage = () => {
         },
       }).then(res => {
         if (!res.ok) {
-          throw new Error("Login failed");
+          throw new Error("Registration failed");
         }
         return res.json();
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/me'] });
-      window.location.hash = "daily";
       toast({
-        title: "Login successful",
-        description: "Welcome back!",
+        title: "Registration successful",
+        description: "Your account has been created. You can now login.",
       });
+      // Redirect to login page
+      window.location.hash = "login";
     },
     onError: (error: any) => {
       toast({
-        title: "Login failed",
-        description: error.message || "Invalid username or password",
+        title: "Registration failed",
+        description: error.message || "Username may already exist",
         variant: "destructive",
       });
     },
   });
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleRegister = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!username || !password) {
+    
+    if (!username || !password || !confirmPassword) {
       toast({
         title: "Validation error",
-        description: "Username and password are required",
+        description: "All fields are required",
         variant: "destructive",
       });
       return;
     }
-    loginMutation.mutate({ username, password });
+    
+    if (password !== confirmPassword) {
+      toast({
+        title: "Validation error",
+        description: "Passwords do not match",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    registerMutation.mutate({ username, password });
   };
 
   return (
     <div className="container max-w-md mx-auto px-4 py-8">
       <Card>
         <CardHeader>
-          <CardTitle>Login</CardTitle>
+          <CardTitle>Create Account</CardTitle>
           <CardDescription>
-            Enter your credentials to access your account
+            Register for a new account to save favorite quotes and personalize your experience
           </CardDescription>
         </CardHeader>
-        <form onSubmit={handleLogin}>
+        <form onSubmit={handleRegister}>
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="username">Username</Label>
               <Input
                 id="username"
-                placeholder="Enter your username"
+                placeholder="Choose a username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
               />
@@ -82,9 +93,19 @@ const LoginPage = () => {
               <Input
                 id="password"
                 type="password"
-                placeholder="Enter your password"
+                placeholder="Choose a password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword">Confirm Password</Label>
+              <Input
+                id="confirmPassword"
+                type="password"
+                placeholder="Confirm your password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
               />
             </div>
           </CardContent>
@@ -92,19 +113,19 @@ const LoginPage = () => {
             <Button
               type="submit"
               className="w-full"
-              disabled={loginMutation.isPending}
+              disabled={registerMutation.isPending}
             >
-              {loginMutation.isPending ? "Logging in..." : "Login"}
+              {registerMutation.isPending ? "Creating Account..." : "Register"}
             </Button>
             <div className="text-center text-sm text-gray-500 mt-2">
-              Don't have an account?{" "}
+              Already have an account?{" "}
               <Button
                 type="button"
                 variant="link"
                 className="p-0"
-                onClick={() => window.location.hash = "register"}
+                onClick={() => window.location.hash = "login"}
               >
-                Register
+                Login
               </Button>
             </div>
           </CardFooter>
@@ -114,4 +135,4 @@ const LoginPage = () => {
   );
 };
 
-export default LoginPage;
+export default RegisterPage;
